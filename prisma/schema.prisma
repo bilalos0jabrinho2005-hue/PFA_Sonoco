@@ -1,13 +1,102 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql" // ou "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id_admin     Int      @id @default(autoincrement())
+  nom         String
+  email       String   @unique
+  mot_de_passe String
+  telephone   String?
+  pannes      Panne[]
+  interventions Intervention[]
+}
+
+model Departement {
+  id_departement Int @id @default(autoincrement())
+  nom            String
+  description    String?
+
+  materiels      Materiel[]
+}
+
+model Categorie {
+  id_categorie Int @id @default(autoincrement())
+  nom          String
+
+  materiels    Materiel[]
+}
+
+model Materiel {
+  id_materiel   Int @id @default(autoincrement())
+  nom           String
+  description   String?
+  statut        String
+  date_ajout    DateTime
+
+  id_departement Int
+  id_categorie   Int
+
+  departement Departement @relation(fields: [id_departement], references: [id_departement])
+  categorie   Categorie   @relation(fields: [id_categorie], references: [id_categorie])
+
+  pannes      Panne[]
+  historiques HistoriqueStatut[]
+  notifications Notification[]
+}
+
+model Panne {
+  id_panne     Int @id @default(autoincrement())
+  description  String
+  date_debut   DateTime
+  date_fin     DateTime?
+  statut       String
+  priorite     String
+
+  id_materiel Int
+  id_user     Int
+
+  materiel Materiel @relation(fields: [id_materiel], references: [id_materiel])
+  user     Admin @relation(fields: [id_admin], references: [id_admin])
+
+  interventions Intervention[]
+}
+
+model Intervention {
+  id_intervention Int @id @default(autoincrement())
+  date_intervention DateTime
+  description String
+  type        String
+  duree       Int
+
+  id_panne Int
+  id_user  Int
+
+  panne Panne @relation(fields: [id_panne], references: [id_panne])
+  admin  Admin @relation(fields: [id_admin], references: [id_admin])
+}
+
+model HistoriqueStatut {
+  id_historique Int @id @default(autoincrement())
+  ancien_statut String
+  nouveau_statut String
+  date_changement DateTime
+
+  id_materiel Int
+  materiel Materiel @relation(fields: [id_materiel], references: [id_materiel])
+}
+
+model Notification {
+  id_notification Int @id @default(autoincrement())
+  message String
+  date    DateTime
+  type    String
+
+  id_materiel Int
+  materiel Materiel @relation(fields: [id_materiel], references: [id_materiel])
 }
